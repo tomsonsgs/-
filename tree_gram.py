@@ -4,10 +4,11 @@ class tree:
     def __init__(self,node):
         self.root=node
 class treenode:
-    def __init__(self,type,content=''):
+    def __init__(self,type,content='',p=1.0):
         self.childs=[]
         self.content=content
         self.type=type
+        self.p=p
     def is_leaf(self):
         if len(self.childs)==0:
             return True
@@ -29,6 +30,11 @@ class treenode:
             if c1.equal(c2)==False:
                 return False
         return True
+    def prob(self):
+        p=self.p
+        for child in self.childs:
+            p=p*child.prob()
+        return p
 def issame(left,right):
     if len(left)!=len(right):
         return False
@@ -42,13 +48,15 @@ def isin(left,lefts):
             return True
     return False
 left_state=[]
-tokens=['命令','连接词','命令','命令']
+tokens=['时间词','命令','连接词','命令','命令']
 file=open("./grammars.txt",'r',encoding='utf-8').readlines()
 grammars=[]
+ps=[]
 for line in file:
     line=line.strip()
     tokenss=line.split()
-    grammars.append(tokenss)
+    grammars.append(tokenss[:-1])
+    ps.append(float(tokenss[-1]))
 print(grammars)
 # grammars=[["S","VP","N"],["VP","N","V"]]
 #我们采用移位规约+递归回溯法，由下至上解析
@@ -66,12 +74,12 @@ def alltree(left,remain):
              for j in range(i,len(left)):
                  # if isfinish:break
                  span=left[i:j+1]
-                 for gram in grammars:
+                 for idx,gram in enumerate(grammars):
                      print(tuple([node.type for node in span]))
                      print(tuple(gram[1:]))
                      if tuple([node.type for node in span])==tuple(gram[1:]):
                          print('add new')
-                         newnode=treenode(gram[0])
+                         newnode=treenode(gram[0],p=ps[idx])
                          newnode.extends(span)
                          left1=copy.deepcopy(left[:i]+[newnode]+left[j+1:])
                          if not isin(left1,left_state):
@@ -102,6 +110,7 @@ alltree(left,remain)
 print(len(trees))
 for tree in trees:
     tree.show()
+    print(tree.prob())
 # print(trees[0].equal(trees[1]))
 # while(1):
 #     isfinish = False
